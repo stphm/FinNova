@@ -3,6 +3,11 @@
 namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
 use App\Repository\AccountRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -10,7 +15,16 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: AccountRepository::class)]
-#[ApiResource]
+#[ApiResource(
+    operations: [
+        new Get(), 
+        new GetCollection(),
+        new Post(),
+        new Put(),
+        new Delete(),
+
+    ]
+)]
 class Account
 {
     #[ORM\Id]
@@ -21,14 +35,14 @@ class Account
     #[ORM\Column(length: 255)]
     private ?string $name = null;
 
+    #[ORM\Column(length: 255)]
+    private ?string $type = null;
+
     #[ORM\Column]
     private ?float $balance = null;
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable:true)]
     private ?\DateTimeInterface $createdAt = null;
-
-    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
-    private ?\DateTimeInterface $modifiedAt = null;
 
     /**
      * @var Collection<int, Transaction>
@@ -36,23 +50,9 @@ class Account
     #[ORM\OneToMany(targetEntity: Transaction::class, mappedBy: 'account')]
     private Collection $transactions;
 
-    /**
-     * @var Collection<int, BudgetForecast>
-     */
-    #[ORM\OneToMany(targetEntity: BudgetForecast::class, mappedBy: 'account')]
-    private Collection $budgetForecasts;
-
-    /**
-     * @var Collection<int, Goal>
-     */
-    #[ORM\OneToMany(targetEntity: Goal::class, mappedBy: 'account')]
-    private Collection $goals;
-
     public function __construct()
     {
         $this->transactions = new ArrayCollection();
-        $this->budgetForecasts = new ArrayCollection();
-        $this->goals = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -68,6 +68,18 @@ class Account
     public function setName(string $name): static
     {
         $this->name = $name;
+
+        return $this;
+    }
+
+    public function getType(): ?string
+    {
+        return $this->type;
+    }
+
+    public function setType(string $type): static
+    {
+        $this->type = $type;
 
         return $this;
     }
@@ -96,18 +108,6 @@ class Account
         return $this;
     }
 
-    public function getModifiedAt(): ?\DateTimeInterface
-    {
-        return $this->modifiedAt;
-    }
-
-    public function setModifiedAt(?\DateTimeInterface $modifiedAt): static
-    {
-        $this->modifiedAt = $modifiedAt;
-
-        return $this;
-    }
-
     /**
      * @return Collection<int, Transaction>
      */
@@ -132,66 +132,6 @@ class Account
             // set the owning side to null (unless already changed)
             if ($transaction->getAccount() === $this) {
                 $transaction->setAccount(null);
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, BudgetForecast>
-     */
-    public function getBudgetForecasts(): Collection
-    {
-        return $this->budgetForecasts;
-    }
-
-    public function addBudgetForecast(BudgetForecast $budgetForecast): static
-    {
-        if (!$this->budgetForecasts->contains($budgetForecast)) {
-            $this->budgetForecasts->add($budgetForecast);
-            $budgetForecast->setAccount($this);
-        }
-
-        return $this;
-    }
-
-    public function removeBudgetForecast(BudgetForecast $budgetForecast): static
-    {
-        if ($this->budgetForecasts->removeElement($budgetForecast)) {
-            // set the owning side to null (unless already changed)
-            if ($budgetForecast->getAccount() === $this) {
-                $budgetForecast->setAccount(null);
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, Goal>
-     */
-    public function getGoals(): Collection
-    {
-        return $this->goals;
-    }
-
-    public function addGoal(Goal $goal): static
-    {
-        if (!$this->goals->contains($goal)) {
-            $this->goals->add($goal);
-            $goal->setAccount($this);
-        }
-
-        return $this;
-    }
-
-    public function removeGoal(Goal $goal): static
-    {
-        if ($this->goals->removeElement($goal)) {
-            // set the owning side to null (unless already changed)
-            if ($goal->getAccount() === $this) {
-                $goal->setAccount(null);
             }
         }
 
